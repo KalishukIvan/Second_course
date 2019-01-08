@@ -1,0 +1,59 @@
+from itertools import defaultdict
+#----------------------------- 1 -----------------------------
+def task_1(n):
+    D = DihedralGroup(n)
+    orbits = []
+    for i in range(1,n+1):
+        orbits.append(D.orbit(i))
+    ln = [len(orbit) for orbit in orbits]
+    return orbits, ln
+
+task_1(10)
+
+#----------------------------- 2 -----------------------------
+def task_2(n):
+    A = AlternatingGroup(n)
+    S = SymmetricGroup(n)
+    representatives = A.conjugacy_classes_representatives()
+    non_conj = None
+    for i in A:
+        if S.conjugate(i) and not A.conjugate(i):
+            non_conj = i
+            break
+    return representatives, non_conj
+
+task_2(5)
+
+#----------------------------- 3 -----------------------------
+def binStrings(n):
+    m = int((n * (n - 1)) / 2)
+    res = []
+    for i in range(1 << m):
+        string = '{:0>'+ str(m) +'}'
+        res.append(string.format(bin(i)[2:]))
+    return res
+
+def binToMatrix(s, n):
+    mx = [[0] + [None for i in range(n - 1)]]
+    for i in range(1, n):
+        indx = (i * (i - 1)) // 2
+        cut = s[indx: indx + i]
+        row = list(map(int, cut)) + [0]+ [None for j in range(n - i - 1)]
+        mx.append(row)
+    for i in range(n):
+        for j in range(i, n):
+            mx[i][j] = mx[j][i]
+    return mx
+
+def task_3(n,m):        # m - number of verticles
+    A = AlternatingGroup(n)
+    strings = binStrings(m)
+    for i in strings:
+        G = Graph(matrix(binToMatrix(i,m)))
+        aut = G.automorphism_group()
+        if aut.is_isomorphic(A):
+            tmp = True
+            return G
+    return 'No such isomorphic graphs with {} verticles'.format(m)
+
+task_3(4,3)

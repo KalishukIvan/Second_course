@@ -1,0 +1,85 @@
+# Algebra Laboratory №2
+# Kalishuk Ivan
+# Student of math and mechanical faculcy of KNU
+
+from sage.sets.finite_set_maps import FiniteSetMaps
+from sage.matrix.operation_table import OperationTable
+
+def _permutation(dom):
+    #Действия изморофны <=> существует биекция(отображение в самого себя)
+    #Ну или другими словами перестановка елементов
+    #Этой вспомогательной функцией задаём все перестановки эелементов
+    permut = Permutations(dom)
+    for p in permut:
+        # Словарь перестановки где ключ это начальный елемент,
+        # а значение это елемент в который он переходит
+        d = dict(zip(list(dom),list(p)))
+        fi = lambda x: d[x] #Тоже самое, что def fi(x): return d[x]
+        yield fi #Не return, чтобы с каждым новым вызовом цикл проходил 1 раз
+
+def _test(dom,fi,f1,f2):
+    # Проверка на второе условие изоморфизма
+    for i in dom:
+        for j in dom:
+            if fi(f1((i,j))) != f2((fi(i), fi(j))): #Если нет, то False
+                return False
+    return True
+
+
+def lab_2(n):
+    res = []
+    for i in range(n):
+        tmp = raw_input('Element {}: '.format(i+1)) #Елементы множества
+        res.append(tmp)
+    res_1 = [(i,j) for i in res for j in res]
+    M = FiniteSetMaps(res_1,res) # Создаём бинарное действие
+    print('Бинарные функции {}-елментного множества'.format(n))
+    for i in M:
+        print(i)
+
+    #Таблицы Кэли:
+    print('Таблицы Кэли')
+    for function in M:
+        table = OperationTable(res, operation = lambda x,y: function((x,y)))
+        print(table)
+
+    #Проверка действий на ассоциативность:
+    print('Вывод не ассоциативных действий')
+    trash = []
+    for func in M:
+        for a in res:
+            for b in res:
+                for c in res:
+                    if func not in trash:
+                        if func((func((a,b)),c)) == func((a,func((b,c)))):
+                            continue
+                        else:
+                            #Выводит функции с разными конечными результатами
+                            print(func)
+                            print(func((func((a,b)),c)),' != ',func((a,func((b,c)))))
+                            trash.append(func)
+
+    print('Классы изоморфных')
+    #Проверка на изоморфизм:
+    classes = [] #Список изоморфных классов
+    counter = 0 #Счётчик изоморфных классов
+    trash = [] #Для очистики результата от повторов
+    for f1 in M:
+        classes_tmp = [] #Список изоморфных с f1
+        for f2 in M:
+            if f1 != f2 and f1 not in trash and f2 not in trash:
+                for fi in _permutation(res): #Все возможные отображения множества
+                    if _test(res,fi,f1,f2): #Проверка на условие изоморфизма
+                        counter += 1
+                        classes_tmp.append(f2)
+                        trash.append(f2)
+        trash.append(f1)
+        if classes_tmp: #Если не пустое
+            classes.append((f1,classes_tmp))
+    for i in classes:
+        print(i)
+    print(counter)
+
+
+lab_2(2)
+lab_2(3)

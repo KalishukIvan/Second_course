@@ -1,0 +1,157 @@
+
+#G = SymmetricGroup(n) - перестановки по 1…n, действие - супурпозиция
+#Sigma = G(«(1,2,3)(4,5)») # обращение к элементу и переименование его
+#Sigma.order()
+#G.order() - все елементы
+#G.cayley_table() - таблица кэли
+#Dn (DihedralGroup) - група движений правильного n-кутника
+#A - непарные подстановки
+#Z - числа по модулю n (0,1,2,3,..., n-1)
+#Порядок группы
+
+
+
+# количество циклов определённо йдлины =
+from sage.matrix.operation_table import OperationTable
+from collections import defaultdict
+
+
+#----------------------------- 1 -----------------------------
+def test(a):
+     print('Cayley table : ')
+     print(a.cayley_table())
+     print('Order :',order(a))
+     print('Abelian : ',a.is_abelian())
+
+# A
+test(DihedralGroup(10))
+# B
+I = Integers(16)
+print('Cayley table : ')
+O = OperationTable(I, operation = operator.mul)
+O
+matrix = O.matrix_of_variables()
+matrix_t = matrix.transpose()
+print('Order :',order(I))
+print('Abelian : ', matrix == matrix_t)
+
+#C
+test(AlternatingGroup(5))
+
+#----------------------------- 2 -----------------------------
+def lcd(a,b):
+    return int(a)*int(b)/gcd(int(a),int(b))
+
+def max_lcd(lst): #
+    tmp = []
+    if len(lst) > 1:
+        tmp.append(lcd(lst[0],lst[1]))
+        tmp += lst[2:]
+        return max_lcd(tmp)
+    else:
+        return int(lst[0])
+
+def counter(lst,n):
+    res = 1
+    tmp = n
+    dict = defaultdict(int)
+    for i in range(len(lst)):
+        dict[lst[i]] += 1
+    div = dict.values()
+    ktp = 1
+    for i in range(len(div)):
+        ktp *= factorial(div[i])
+    for i in range(len(lst)):
+        res *= binomial(tmp,int(lst[i]))*factorial(int(lst[i]-1))
+        tmp = tmp - int(lst[i])
+    res = res/ktp
+    return res
+
+def part(n, k):
+    def _part(n, k, pre):
+        if n <= 0:
+            return []
+        if k == 1:
+            if n <= pre: # Её сравнивают с n
+                return [[n]] # И возвращают n
+            return []
+        ret = []
+        for i in range(min(pre, n), 0, -1):
+            ret += [[i] + sub for sub in _part(n-i, k-1, i)]
+        return ret
+    return _part(n, k, n)
+
+def is_pair(lst):
+    counter = 0
+    for i in range(len(lst)):
+        if int(lst[i])%2 == 0:
+            counter += 1
+    if counter % 2 ==0:
+        return True
+    else:
+        return False
+
+def test_2_fast_sym(n):             #for SymmetricGroup
+    dict = defaultdict(int)
+    res = []
+    for i in range(1,n+1):
+        res.append(part(n,i))
+    for i in range(len(res)):
+        for j in range(len(res[i])):
+            tmp = max_lcd(res[i][j])
+            dict[tmp] += counter(res[i][j],n)
+    print('All elements with their periods of SymmetricGroup{}'.format(n), dict)
+
+def test_2_fast_2_alt(n):           #for AlternatingGroup
+    dict = defaultdict(int)
+    res = []
+    for i in range(1,n+1):
+        res.append(part(n,i))
+    for i in range(len(res)):
+        for j in range(len(res[i])):
+            if is_pair(res[i][j]):
+                tmp = max_lcd(res[i][j])
+                dict[tmp] += counter(res[i][j],n)
+    print('All elements with their periods of AlternatingGroup{}'.format(n), dict)
+
+def test_2_slow(S):
+    lst = []
+    mx = 0
+    dict = defaultdict(int)
+    for s in S:
+        dict[order(s)] += 1
+    print(dict)
+
+n = int(input('Input period of group: '))
+
+S = SymmetricGroup(n)
+A = AlternatingGroup(n)
+
+test_2_fast_sym(n)    #For SymmetricGroup
+test_2_fast_2_alt(n)   #For AlternatingGroup
+#print('Slow version: ',test_2_slow(S))
+#print('Slow version: ',test_2_slow(A))
+
+
+#----------------------------- 3 -----------------------------
+def test_3_brud(n,k):
+    S = SymmetricGroup(n)
+    for s in S:
+        if order(s) == k:
+            return s
+
+def test_3(n,k):
+    res = []
+    answ = False
+    for i in range(1,n+1):
+        res.append(part(n,i))
+    for i in range(len(res)):
+        for j in range(len(res[i])):
+            tmp = max_lcd(res[i][j])
+            if k == tmp:
+                answ = True
+    print('Element with period {} in SymmetricGroup({}): '.format(k,n), answ)
+
+
+
+print(test_3(10,2))
